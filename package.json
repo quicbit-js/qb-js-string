@@ -1,0 +1,29 @@
+{
+  "name": "qb-js-string",
+  "version": "1.0.0",
+  "description": "qb-js-string",
+  "homepage": "https://github.com/quicbit-js/qb-js-string",
+  "url": "https://github.com/quicbit-js/qb-js-string/issues",
+  "email": "support@quicbit.com",
+  "repository": "quicbit-js/qb-js-string",
+  "devDependencies": {
+    "tape": "^4.6.3",
+    "test-kit": "^2.5.2"
+  },
+  "scripts": {
+    "test": "tape test.js",
+    "cov": "tap --coverage-report=html test.js"
+  },
+  "keywords": [
+    "fast",
+    "compact",
+    "minimal",
+    "qb",
+    "qb1",
+    "quicbit",
+    "data",
+    "performance"
+  ],
+  "author": "Matthew Voss",
+  "license": "ISC"
+}

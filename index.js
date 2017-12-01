@@ -1,0 +1,139 @@
+// Software License Agreement (ISC License)
+//
+// Copyright (c) 2017, Matthew Voss
+//
+// Permission to use, copy, modify, and/or distribute this software for
+// any purpose with or without fee is hereby granted, provided that the
+// above copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+'use strict'
+
+function jstr (v) {
+    if (v === null) {
+        return 'null'
+    } else if (v === undefined) {
+        return 'undefined'
+    } else {
+        switch (typeof v) {
+            case 'object':
+                return Array.isArray(v) ? arr2str(v) : obj2str(v)
+            case 'string':
+                return str2str(v)
+            case 'number' :
+            case 'boolean':
+                return String(v)
+            default:
+                err(typeof v + ' not implemented')
+        }
+    }
+}
+// escape logic, especially the regex, is based on logic in http://github.com/douglascrockford/JSON-js,
+// with additional characters from ECMA-262.
+
+// ECMA-262 line terminators
+// \u000A Line Feed <LF>
+// \u000D Carriage Return <CR>
+// \u2028 Line separator <LS>
+// \u2029 paragraph sep <PS>
+
+// ECMA 262 other mentions (not lised in slash_esc)
+// \u00A0   no-break space
+// \uFEFF   byte order mark
+// \u0020   space (not escaped)
+// PLUS - any unicode whitespace
+
+var slash_esc = {
+    '\b': '\\b',      //  \u0008   <BS> backspace
+    '\t': '\\t',      //  \u0009   <HT> horizontal tab
+    '\n': '\\n',      //  \u000A   <LF> new line (line feed)
+    '\v': '\\v',      //  \u000B   <VT> vertical tab
+    '\f': '\\f',      //  \u000C   <FF> form feed
+    '\r': '\\r',      //  \u000D   <CR> carriage return
+    '"': '\\"',       //  \u0022   double
+    "'": '\\',        //  \u0027   single
+    '\\': '\\\\',     //  \u005C   backslash
+}
+var esc_re = /['\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g
+function str2str (s) {
+    esc_re.lastIndex = 0
+    var q = "'"
+    if (esc_re.test(s)) {
+        var s_qt = 0    // number single-quotes
+        var d_qt = 0    // number double-quotes
+        s = s.replace(esc_re, function (c) {
+            var esc = slash_esc[c]
+            if (esc) {
+                if (c === '"') { d_qt++ }
+                else if (c === "'" ) { s_qt++ }
+            } else {
+                esc = "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
+            }
+            return esc
+        })
+        if (d_qt < s_qt) { q = '"' }
+    }
+    return q + s + q
+}
+
+function key2str (k) {
+    return (k.match(/^[_$a-zA-Z][_$a-zA-Z0-9]*$/)) ? k : str2str(k)
+}
+
+function arr2str (a) {
+    if (a.length === 0) { return '[]' }
+    var ret = a.map(function (v) {return jstr(v)})
+    return '[ ' + ret.join(', ') + ' ]'
+}
+
+function obj2str (o) {
+    var keys = Object.keys(o)
+    if (keys.length === 0) { return '{}' }
+    var pairs = keys.map(function (k) { return key2str(k) + ': ' + jstr(o[k]) })
+    return '{ ' + pairs.join(', ') + ' }'
+}
+
+function is_table (a) {
+    if (a.length < 2) { return false }
+    var len = a[0].length
+    return !a.find(function (v) {
+        return !v || (v.length && v.length !== len) || !Array.isArray(v)
+    })
+}
+
+function padr (s, l, c) { c = c || ' '; while (s.length < l) s = s + c; return s }
+
+function table_rows (a) {
+    var cell_strings = a.map(function (row) {return row.map (function (v) {return jstr(v) })})
+    var header = cell_strings[0]
+    var widths = header.map(function (h) { return h.length } )
+
+    cell_strings.forEach(function (row) {
+        row.forEach(function (s,i) {
+            if (s.length > widths[i] ) { widths[i] = s.length }
+        })
+    })
+
+    return cell_strings.map(function (row) {
+        var padded = row.map(function (s, i) {return padr(s, widths[i], ' ') })
+        return '[ ' + padded.join(', ') + ' ],'
+    })
+}
+
+function table (a) {
+  is_table (a) || err('data is not a table (array of 2 or more same-length arrays)')
+  return table_rows(a).join('\n')
+}
+
+function err (msg) { throw Error(msg) }
+
+jstr.table_rows = table_rows
+jstr.table = table
+
+module.exports = jstr
