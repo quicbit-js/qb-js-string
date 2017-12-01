@@ -1,14 +1,17 @@
 {
   "name": "qb-js-string",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Simple and limited generation of javascript literals (arrays, objects, strings...)",
   "homepage": "https://github.com/quicbit-js/qb-js-string",
   "url": "https://github.com/quicbit-js/qb-js-string/issues",
   "email": "support@quicbit.com",
   "repository": "quicbit-js/qb-js-string",
   "devDependencies": {
-    "tape": "^4.6.3",
+    "tape": "^4.8.0",
     "test-kit": "^2.5.2"
+  },
+  "dependencies": {
+    "qb-assign": "^1.0.1"
   },
   "scripts": {
     "test": "tape test.js",
