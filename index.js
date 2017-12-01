@@ -107,7 +107,7 @@ function is_table (a) {
   })
 }
 
-function padr (s, l, c) { while (s.length < l) s = s + c; return s }
+function padr (s, l) { while (s.length < l) s += ' '; return s }
 
 function table_rows (a, opt) {
   var numcols = a[0].length
@@ -128,7 +128,7 @@ function table_rows (a, opt) {
   return cell_strings.map(function (row) {
     var padded = row.map(function (s, ci) {
       // add commas next to data (less cluttered and easier to manage by hand later)
-      return padr(s, widths[ci], ' ')
+      return padr(s, widths[ci])
     })
     return '[ ' + padded.join(' ') + ' ],'
   })
