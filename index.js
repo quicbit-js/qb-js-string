@@ -30,7 +30,7 @@ function jstr (v) {
             case 'boolean':
                 return String(v)
             default:
-                err(typeof v + ' not implemented')
+                err('type "' + (typeof v) + '" not implemented')
         }
     }
 }
@@ -56,11 +56,18 @@ var slash_esc = {
     '\v': '\\v',      //  \u000B   <VT> vertical tab
     '\f': '\\f',      //  \u000C   <FF> form feed
     '\r': '\\r',      //  \u000D   <CR> carriage return
-    '"': '\\"',       //  \u0022   double
-    "'": '\\',        //  \u0027   single
     '\\': '\\\\',     //  \u005C   backslash
 }
+var qt_esc = {
+    '"': '\\"',
+    "'": "\\'",
+}
+var quote_re = {
+    '"': /"/g,
+    "'": /'/g,
+}
 var esc_re = /['\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g
+
 function str2str (s) {
     esc_re.lastIndex = 0
     var q = "'"
@@ -68,16 +75,26 @@ function str2str (s) {
         var s_qt = 0    // number single-quotes
         var d_qt = 0    // number double-quotes
         s = s.replace(esc_re, function (c) {
-            var esc = slash_esc[c]
-            if (esc) {
-                if (c === '"') { d_qt++ }
-                else if (c === "'" ) { s_qt++ }
+            var ret = slash_esc[c]
+            if (ret) {
+            } else if (c === '"') {
+                d_qt++; ret = c             // just count
+            } else if (c === "'") {
+                s_qt++; ret = c             // just count
             } else {
-                esc = "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
+                ret = "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
             }
-            return esc
+            return ret
         })
-        if (d_qt < s_qt) { q = '"' }
+        if (s_qt) {
+            if (d_qt < s_qt) {
+                q = '"'
+            }
+            if (d_qt) {
+                // string has single and double quotes - escape the chosen quote (least-bad)
+                s = s.replace(quote_re[q], qt_esc[q])
+            }
+        }
     }
     return q + s + q
 }
@@ -107,7 +124,7 @@ function is_table (a) {
     })
 }
 
-function padr (s, l, c) { c = c || ' '; while (s.length < l) s = s + c; return s }
+function padr (s, l, c) { while (s.length < l) s = s + c; return s }
 
 function table_rows (a) {
     var cell_strings = a.map(function (row) {return row.map (function (v) {return jstr(v) })})

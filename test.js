@@ -19,10 +19,12 @@ var jstr = require('.')
 
 test('jstr() literals', function (t) {
     t.table_assert([
-        [   's',              'exp' ],
+        [  'v',              'exp' ],
         [    '',               "''" ],
         [ 'abc',            "'abc'" ],
         [ "Bill's",         "\"Bill's\"" ],
+        [ "\"Bill's\"",      "'\"Bill\\'s\"'" ],
+
         [ 'a\n',            "'a\\n'" ],
         [ 'a\\b',            "'a\\\\b'" ],
         [ 'x\u2028y\u2029\u2030', "'x\\u2028y\\u2029‰'" ],
@@ -32,6 +34,13 @@ test('jstr() literals', function (t) {
         [ false,           "false"  ],
         [  null,             "null" ],
     ], jstr )
+})
+
+test('jstr() errors',          function (t) {
+    t.table_assert([
+        [ 'v',                      'exp' ],
+        [ function () {},           /type "function" not implemented/ ],
+    ], jstr, {assert: 'throws'} )
 })
 
 test('jstr() array - single', function (t) {
@@ -52,6 +61,7 @@ test('jstr() object', function (t) {
         [ {'a':2},                          "{ a: 2 }" ],
         [ {'a':{'b':7}},                    "{ a: { b: 7 } }" ],
         [ {'a':null, 'b': undefined },      "{ a: null, b: undefined }" ],
+        [ { '&q': true },                   "{ '&q': true }" ],
     ], jstr)
 })
 
@@ -71,4 +81,12 @@ test('jstr.table()', function (t) {
         [ [['a','b'], [1,'x'], [2,'y']],            "[ 'a', 'b' ],\n[ 1  , 'x' ],\n[ 2  , 'y' ]," ],
         [ [['a','b'], [1,['x', 4]], [2,['y',5]]],   "[ 'a', 'b'        ],\n[ 1  , [ 'x', 4 ] ],\n[ 2  , [ 'y', 5 ] ]," ],
     ], jstr.table)
+})
+
+test('jstr.table() errors', function (t) {
+    t.table_assert([
+        [ 'tbl',                                    'exp' ],
+        [ [['a'], [1, 2]],                          /data is not a table/ ],
+        [ [['a', 'b', 'c']],                        /data is not a table/ ],
+    ], jstr.table, {assert: 'throws'})
 })
