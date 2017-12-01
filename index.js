@@ -110,22 +110,25 @@ function is_table (a) {
 function padr (s, l, c) { while (s.length < l) s = s + c; return s }
 
 function table_rows (a, opt) {
-  var cell_strings = a.map(function (row) { return row.map(function (v) { return _jstr(v, init_opt(opt), 0) }) })
-  var numcols = cell_strings[0].length
+  var numcols = a[0].length
+  var cell_strings = a.map(function (row) {
+    return row.map(function (v, ci) {
+      return _jstr(v, init_opt(opt), 0) + (ci < numcols - 1 ? ',' : '')     // put comma next to data (less cluttered)
+    })
+  })
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
 
   cell_strings.forEach(function (row) {
-    row.forEach(function (s, i) {
-      var slen = s.length + (i < numcols.length - 1 ? 1 : 0)    // + 1 for comma
-      if (slen > widths[i]) { widths[i] = slen }
+    row.forEach(function (s, ci) {
+      var slen = s.length
+      if (slen > widths[ci]) { widths[ci] = slen }
     })
   })
 
   return cell_strings.map(function (row) {
-    var padded = row.map(function (s, i) {
+    var padded = row.map(function (s, ci) {
       // add commas next to data (less cluttered and easier to manage by hand later)
-      if (i < row.length - 1) { s += ',' }
-      return padr(s, widths[i], ' ')
+      return padr(s, widths[ci], ' ')
     })
     return '[ ' + padded.join(' ') + ' ],'
   })
@@ -136,7 +139,7 @@ function table (a, opt) {
   return table_rows(a, opt).join('\n')
 }
 
-// escape logic, especially the regex, is based on logic in http://github.com/douglascrockford/JSON-js,
+// escape logic is based on logic in http://github.com/douglascrockford/JSON-js,
 // with additional characters from ECMA-262:
 // line terminators: \u000A <LF> \u000D <CR> \u2028 <LS> \u2029 <PS>
 // other mentions (not listed in slash_esc)
