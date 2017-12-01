@@ -129,17 +129,21 @@ function padr (s, l, c) { while (s.length < l) s = s + c; return s }
 function table_rows (a) {
   var cell_strings = a.map(function (row) { return row.map(function (v) { return jstr(v) }) })
   var header = cell_strings[0]
-  var widths = header.map(function (h) { return h.length })
+  var widths = header.map(function (h) { return h.length + 1 }) // + 1 for comma
 
   cell_strings.forEach(function (row) {
     row.forEach(function (s, i) {
-      if (s.length > widths[i]) { widths[i] = s.length }
+      if (s.length > widths[i]) { widths[i] = s.length + 1 }  // + 1 for comma
     })
   })
 
   return cell_strings.map(function (row) {
-    var padded = row.map(function (s, i) { return padr(s, widths[i], ' ') })
-    return '[ ' + padded.join(', ') + ' ],'
+    var padded = row.map(function (s, i) {
+      // add commas next to data (less cluttered and easier to manage by hand later)
+      if (i < row.length - 1) { s += ',' }
+      return padr(s, widths[i], ' ')
+    })
+    return '[ ' + padded.join(' ') + ' ],'
   })
 }
 
