@@ -20,9 +20,9 @@ var assign = require('qb-assign')
 var DEFAULT_OPT = [
   // igap is initial gap (next to brace) [ <here> val1, val2 <here> ]
   // gap is gap between values [ val1,<here>val2 ] - gets smaller at greater depths
-  {igap: ' ', gap: ' '},  // depth  0
-  {igap: '',  gap: ' '},   // depth  1
-  {igap: '',  gap: ''},    // depth >1
+  {igap: ' ', gap: ' '},    // depth  0
+  {igap: '',  gap: ' '},    // depth  1
+  {igap: '',  gap: ''},     // depth >1
 ]
 
 function init_opt (opt) {
@@ -127,7 +127,6 @@ function table_rows (a, opt) {
 
   return cell_strings.map(function (row) {
     var padded = row.map(function (s, ci) {
-      // add commas next to data (less cluttered and easier to manage by hand later)
       return padr(s, widths[ci])
     })
     return '[ ' + padded.join(' ') + ' ],'
