@@ -43,3 +43,50 @@ npm install qb-js-string
     [ 2  , [ 'y', 5, { a: 23, b: true } ] ],
     
 ... this is how test-kit generates nicely formated table rows from javascript test tables.
+
+## Dev Notes
+
+It would be nice to extend the formatting to do this:
+
+// simple flex-spacing algorithm prioritizes left-most column alignment and when
+// exceeded, attempts to recover alignment on subsequent columns.  So when arranging
+// test data, placing smaller columns to the left to creates better fit.
+// So the position of col2 and col3 below represent the max point that accomodated all
+// qualifying data.  Rows labled '1&2' fit col1 and col2 and exceeded (40) at
+// col3.  Rows '1&3' failed to fit col2, but fit again at col3 and were used to
+// align that column.
+// (max_col: 20)
+//
+//        0                   20                  40                  60
+//        |                   |                   |                   |
+//      [ 'col1',       'col2',                'col3' ],
+// 123  [ 'short',      'medium_len',          'long long long long long' ],
+// 123  [ 'short',      'medium_len',          'long long long long long' ],
+// 1&2  [ 'medium_len', 'long long long long long long', 'short' ],
+// 1&2  [ 'medium_len', 'long long long long long long', 'short' ],
+// 123  [ 'short',      'short',               'long long long long long' ],
+// 123  [ 'short',      'medium_len',          'long long long long long' ],
+// 1&3  [ 'long long long long long', 'short', 'long long long long long' ],
+// 1&3  [ 'long long long long long', 'short', 'medium len' ],
+//
+
+
+... that would create nice layouts.  In fact, the design of a table sizing tool for tree-structures is quite 
+interesting.  The approach that comes to mind is a tree of nodes that could answer the question - what is your
+min size, and what is your preferred size, and perhaps what are the sizes in-between that you like and 
+even - how much do you prefer those sizes.  Parents would then find nice column layout by asking children - that
+ask their children.  Children could also report sizes in two dimensions - row and column - and the text table could
+allow cells to be vertical when horizontal was too long.  In doing the layout there would be 3 stages:
+
+* create tree
+* measure
+* generate
+
+Creating the tree is the creation of nodes mentioned above, basically mapping a plain object tree to a node tree.
+Measuring is asking children their preference and answering parent those same questions.  A parent node attempts to
+fit its children into a specified layout.  The table does this by comparing answers from it's children's children
+to fit into columns.  Generating is the parent telling the nodes to go ahead and make themselves (return text) 
+within a given constraint that they promised they would/could generate, and padding/aligning this output.
+
+The same algorithm might be able to create a number of formats by simply defining new leaf nodes and reusing the
+array/object algos with different settings/delimiters.

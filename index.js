@@ -63,27 +63,6 @@ function _jstr (v, optarr, depth) {
   }
 }
 
-// simple flex-spacing algorithm prioritizes left-most column alignment and when
-// exceeded, attempts to recover alignment on subsequent columns.  So when arranging
-// test data, placing smaller columns to the left to creates better fit.
-// So the position of col2 and col3 below represent the max point that accomodated all
-// qualifying data.  Rows labled '1&2' fit col1 and col2 and exceeded (40) at
-// col3.  Rows '1&3' failed to fit col2, but fit again at col3 and were used to
-// align that column.
-// (max_col: 20)
-//
-//        0                   20                  40                  60
-//        |                   |                   |                   |
-//      [ 'col1',       'col2',                'col3' ],
-// 123  [ 'short',      'medium_len',          'long long long long long' ],
-// 123  [ 'short',      'medium_len',          'long long long long long' ],
-// 1&2  [ 'medium_len', 'long long long long long long', 'short' ],
-// 1&2  [ 'medium_len', 'long long long long long long', 'short' ],
-// 123  [ 'short',      'short',               'long long long long long' ],
-// 123  [ 'short',      'medium_len',          'long long long long long' ],
-// 1&3  [ 'long long long long long', 'short', 'long long long long long' ],
-// 1&3  [ 'long long long long long', 'short', 'medium len' ],
-//
 function arr2str (a, optarr, depth) {
   if (a.length === 0) { return '[]' }
   var opt = optarr[depth] || optarr[optarr.length-1]
