@@ -38,8 +38,8 @@ npm install qb-js-string
     > var jstr = require('qb-js-string')
     > console.log(jstr.table([['a','b'], [1,['x', 4, {b:false}] ], [2,['y',5,{a:23, b:true}]]]))
     
-    [ 'a', 'b'                            ],
-    [ 1  , [ 'x', 4, { b: false } ]       ],
+    [ 'a', 'b' ],
+    [ 1  , [ 'x', 4, { b: false } ] ],
     [ 2  , [ 'y', 5, { a: 23, b: true } ] ],
     
 ... this is how test-kit generates nicely formated table rows from javascript test tables.
