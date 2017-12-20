@@ -18,11 +18,13 @@ var assign = require('qb-assign')
 
 // options-by-depth.
 var DEFAULT_OPT = [
-  // igap is initial gap (next to brace) [ <here> val1, val2 <here> ]
-  // gap is gap between values [ val1,<here>val2 ] - gets smaller at greater depths
-  {igap: ' ', gap: ' '},    // depth  0
-  {igap: '',  gap: ' '},    // depth  1
-  {igap: '',  gap: ''},     // depth >1
+  // ogap (outter gap) (next to braces)           [<here>val1, val2<here>]
+  // vgap (value gap) between values              [ val1,<here>val2 ]
+  //      and between object key-value pairs      { key1: val1,<here>key2: val2 }
+  // kgap (key gap) is the gap between key-value  { key1:<here>val1, key2:<here>val2 }
+  {ogap: ' ', kgap: ' ', vgap: ' '},    // depth  0
+  {ogap: '',  kgap: ' ', vgap: ' '},    // depth  1
+  {ogap: '',  kgap: '', vgap: ''},     // depth >1
 ]
 
 function init_opt (opt) {
@@ -68,14 +70,15 @@ function arr2str (a, optarr, depth) {
   var opt = optarr[depth] || optarr[optarr.length-1]
   var last = a.length - 1
   var ret = a.map(function (v, i) { return _jstr(v, optarr, depth + 1) + (i < last ? ',' : '') })
-  return '[' + opt.igap + ret.join(opt.gap) + opt.igap + ']'
+  return '[' + opt.ogap + ret.join(opt.vgap) + opt.ogap + ']'
 }
 
 function obj2str (o, optarr, depth) {
   var keys = Object.keys(o)
   if (keys.length === 0) { return '{}' }
-  var pairs = keys.map(function (k) { return key2str(k) + ': ' + _jstr(o[k], optarr, depth + 1) })
-  return '{ ' + pairs.join(', ') + ' }'
+  var opt = optarr[depth] || optarr[optarr.length-1]
+  var pairs = keys.map(function (k) { return key2str(k) + ':' + opt.kgap + _jstr(o[k], optarr, depth + 1) })
+  return '{' + opt.ogap + pairs.join(',' + opt.vgap) + opt.ogap + '}'
 }
 
 function is_table (a) {
@@ -105,8 +108,9 @@ function table_rows (a, opt) {
   })
 
   return cell_strings.map(function (row) {
+    var last = row.length - 1
     var padded = row.map(function (s, ci) {
-      return padr(s, widths[ci])
+      return ci === last ? s : padr(s, widths[ci])  // don't pad last column
     })
     return '[ ' + padded.join(' ') + ' ],'
   })
