@@ -112,6 +112,20 @@ test('jstr.table_rows()', function (t) {
   ], jstr.table_rows)
 })
 
+test('jstr.table_rows() comments', function (t) {
+  t.table_assert([
+    [ 'tbl',                                    'exp' ],
+    [ ['#head', ['a'], [1], '#r2', [2], '#tail'], [
+      "'#head',",
+      "[ 'a' ],",
+      "[ 1 ],",
+      "'#r2',",
+      "[ 2 ],",
+      "'#tail',"
+    ]],
+  ], jstr.table_rows)
+})
+
 test('jstr.table()', function (t) {
   t.table_assert([
     [ 'tbl',                                    'exp' ],

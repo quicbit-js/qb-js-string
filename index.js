@@ -91,9 +91,15 @@ function is_table (a) {
 
 function padr (s, l) { while (s.length < l) s += ' '; return s }
 
+function is_comment (s) {
+  return typeof s === 'string' && s[0] === '#'
+}
 function table_rows (a, opt) {
-  var numcols = a[0].length
+  var numcols = a.find(function (row) { return !is_comment(row) }).length
   var cell_strings = a.map(function (row) {
+    if (is_comment(row)) {
+      return row
+    }
     return row.map(function (v, ci) {
       return _jstr(v, init_opt(opt), 0) + (ci < numcols - 1 ? ',' : '')     // put comma next to data (less cluttered)
     })
@@ -101,6 +107,9 @@ function table_rows (a, opt) {
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
 
   cell_strings.forEach(function (row) {
+    if (is_comment(row)) {
+      return
+    }
     row.forEach(function (s, ci) {
       var slen = s.length
       if (slen > widths[ci]) { widths[ci] = slen }
@@ -108,6 +117,9 @@ function table_rows (a, opt) {
   })
 
   return cell_strings.map(function (row) {
+    if (is_comment(row)) {
+      return _jstr(row) + ','
+    }
     var last = row.length - 1
     var padded = row.map(function (s, ci) {
       return ci === last ? s : padr(s, widths[ci])  // don't pad last column
