@@ -85,6 +85,9 @@ function is_table (a) {
   if (a.length < 2) { return false }
   var len = a[0].length
   return !a.find(function (v) {
+    if (is_comment(v)) {
+      return false
+    }
     return !v || (v.length && v.length !== len) || !Array.isArray(v)
   })
 }
