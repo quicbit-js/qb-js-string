@@ -19,20 +19,21 @@ var jstr = require('.')
 
 test('jstr() literals', function (t) {
   t.table_assert([
-    [  'v',                       'exp' ],
-    [    '',                      "''" ],
-    [ 'abc',                      "'abc'" ],
-    [ "Bill's",                   "\"Bill's\"" ],
-    [ "\"Bill's\"",               "'\"Bill\\'s\"'" ],
-
-    [ 'a\n',                      "'a\\n'" ],
-    [ 'a\\b',                     "'a\\\\b'" ],
-    [ 'x\u2028y\u2029\u2030',     "'x\\u2028y\\u2029‰'" ],
-    [ 9,                          "9" ],
-    [ 3.245,                      "3.245" ],
-    [ true,                       "true"  ],
-    [ false,                      "false"  ],
-    [  null,                      "null" ],
+    [  'v',                   'opt',               'exp' ],
+    // [ "\"Bill's\"",           {lang: 'java'},       "\"Bill\\'s\"" ],
+    [  '',                    null,                 "''" ],
+    [ 'abc',                  null,                 "'abc'" ],
+    [ "Bill's",               null,                 "\"Bill's\"" ],
+    [ "\"Bill's\"",           null,                 "'\"Bill\\'s\"'" ],
+    [ "\"It's Bill's '\"",   null,                 '"\\"It\'s Bill\'s \'""'  ],
+    [ 'a\n',                  null,                 "'a\\n'" ],
+    [ 'a\\b',                 null,                 "'a\\\\b'" ],
+    [ 'x\u2028y\u2029\u2030', null,                 "'x\\u2028y\\u2029‰'" ],
+    [ 9,                      null,                 "9" ],
+    [ 3.245,                  null,                 "3.245" ],
+    [ true,                   null,                 "true"  ],
+    [ false,                  null,                 "false"  ],
+    [  null,                  null,                 "null" ],
   ], jstr )
 })
 

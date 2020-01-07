@@ -65,7 +65,6 @@ function init_opt (opt) {
     var dopt = DEFAULT_OPTS[opt.lang] || DEFAULT_OPTS.js
     ret = assign({}, dopt, opt)
     // use defaults to fill missing options at every depth.
-    ret.lang = ret.lang || 'js'
     if (ret.gaps) {
       ret.gaps = Array.isArray(ret.gaps) ? ret.gaps : [ret.gaps]
       var dgaps = dopt.gaps
@@ -76,7 +75,7 @@ function init_opt (opt) {
   } else {
     ret = DEFAULT_OPTS.js
   }
-  if (!ret.qoutes_obj) {
+  if (!ret.quotes_obj) {
     // convert to object with quote keys (fast lookup)
     ret.quotes_obj = ret.quotes.reduce(function(m, v) { m[v] = 1; return m}, {})
   }
@@ -196,46 +195,37 @@ var slash_esc = {
   '\r': '\\r',      //  \u000D   <CR> carriage return
   '\\': '\\\\'     //  \u005C   backslash
 }
-var qt_esc = {
-  '"': '\\"',
-  "'": "\\'"
-}
-var quote_re = {
-  '"': /"/g,
-  "'": /'/g
-}
-var esc_re = /['\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g
+
+var esc_re = /[\\\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g
 
 function str2str (s, opt) {
   esc_re.lastIndex = 0
   var q = opt.quotes[0] // default quote
   if (esc_re.test(s)) {
-    var q_counts = {}
     s = s.replace(esc_re, function (c) {
-      var ret = slash_esc[c]
-      if (ret) { return ret }
-      if (opt.quotes_obj[c]) {
-        q_counts[c] = (q_counts[c] || 0) + 1
-        ret = c
-      } else {
-        ret = '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4)
-      }
-      return ret
+      return slash_esc[c] || '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4)
     })
+  }
 
-    var quotes_found = Object.keys(q_counts)
-    if (quotes_found.length) {
-      if (opt.quotes.length > 1) {
-        // set q to first unused quote
-        q = opt.quotes.find(function (q) {return q_counts[q] == null})
-        if (q == null) {
-          // all quotes used, set q to least-used
-          q = opt.quotes.reduce(function (c, q) {
-            return q_counts[q] < q_counts[c] ? q : c
-          }, opt.quotes[0])
-        }
-        s = s.replace(q, '\\' + q)
+  var q_counts = {}
+  for (var i=0; i<s.length; i++) {
+    var c = s[i]
+    if (opt.quotes_obj[c]) {
+      q_counts[c] = (q_counts[c] || 0) + 1
+    }
+  }
+  var quotes_found = Object.keys(q_counts)
+  if (quotes_found.length) {
+    if (opt.quotes.length > 1) {
+      // set q to first unused quote
+      q = opt.quotes.find(function (q) {return q_counts[q] == null})
+      if (q == null) {
+        // all quotes used, set q to least-used
+        q = opt.quotes.reduce(function (c, q) {
+          return q_counts[q] < q_counts[c] ? q : c
+        }, opt.quotes[0])
       }
+      s = s.replace(q, '\\' + q)
     }
   }
   return q + s + q
