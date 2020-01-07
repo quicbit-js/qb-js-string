@@ -25,6 +25,8 @@ var DEFAULT_OPT = {
   obj_end: '}',
   keyval_sep: ':',
   val_sep: ',',
+  row_sep: ',',
+  cell_sep: ',',
   quote: ["'", '"'],  // if more than one, the best is chosen.
   // gap settings by depth. deeply nested values are more squeezed together
   gaps: [
@@ -41,7 +43,7 @@ var DEFAULT_OPT = {
 function init_opt (opt) {
   var ret
   if (opt) {
-    ret = assign({}, opt)
+    ret = assign({}, DEFAULT_OPT, opt)
     // use defaults to fill missing options at every depth.
     ret.lang = ret.lang || 'js'
     if (ret.gaps) {
@@ -82,19 +84,19 @@ function _jstr (v, opt, depth) {
 }
 
 function arr2str (a, opt, depth) {
-  if (a.length === 0) { return '[]' }
+  if (a.length === 0) { return opt.arr_beg + opt.arr_end }
   var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
   var last = a.length - 1
-  var ret = a.map(function (v, i) { return _jstr(v, opt, depth + 1) + (i < last ? ',' : '') })
-  return '[' + gap.ogap + ret.join(gap.vgap) + gap.ogap + ']'
+  var ret = a.map(function (v, i) { return _jstr(v, opt, depth + 1) + (i < last ? opt.val_sep : '') })
+  return opt.arr_beg + gap.ogap + ret.join(gap.vgap) + gap.ogap + opt.arr_end
 }
 
 function obj2str (o, opt, depth) {
   var keys = Object.keys(o)
-  if (keys.length === 0) { return '{}' }
+  if (keys.length === 0) { return opt.obj_beg + opt.obj_end }
   var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
-  var pairs = keys.map(function (k) { return key2str(k) + ':' + gap.kgap + _jstr(o[k], opt, depth + 1) })
-  return '{' + gap.ogap + pairs.join(',' + gap.vgap) + gap.ogap + '}'
+  var pairs = keys.map(function (k) { return key2str(k) + opt.keyval_sep + gap.kgap + _jstr(o[k], opt, depth + 1) })
+  return opt.obj_beg + gap.ogap + pairs.join(opt.val_sep + gap.vgap) + gap.ogap + opt.obj_end
 }
 
 function is_table (a) {
@@ -120,7 +122,7 @@ function table_rows (a, opt) {
       return row
     }
     return row.map(function (v, ci) {
-      return _jstr(v, init_opt(opt), 0) + (ci < numcols - 1 ? ',' : '')     // put comma next to data (less cluttered)
+      return _jstr(v, init_opt(opt), 0) + (ci < numcols - 1 ? opt.row_sep : '')     // put comma next to data (less cluttered)
     })
   })
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
@@ -137,7 +139,7 @@ function table_rows (a, opt) {
 
   return cell_strings.map(function (row) {
     if (is_comment(row)) {
-      return _jstr(row) + ','
+      return _jstr(row) + opt.cell_sep
     }
     var last = row.length - 1
     var padded = row.map(function (s, ci) {
