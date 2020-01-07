@@ -39,7 +39,7 @@ var DEFAULT_OPTS = {
     val_sep: ',',
     row_sep: ',',
     cell_sep: ',',
-    quote: ['"'],  // if more than one, the best is chosen.
+    quotes: ['"'],  // if more than one, the best is chosen.
     // gap settings by depth. deeply nested values are more squeezed together
     gaps: DEFAULT_GAPS,
   },
@@ -53,7 +53,7 @@ var DEFAULT_OPTS = {
     val_sep: ',',
     row_sep: ',',
     cell_sep: ',',
-    quote: ["'", '"'],  // if more than one, the best is chosen.
+    quotes: ["'", '"'],  // if more than one, the best is chosen.
     // gap settings by depth. deeply nested values are more squeezed together
     gaps: DEFAULT_GAPS,
   }
@@ -75,6 +75,10 @@ function init_opt (opt) {
     }
   } else {
     ret = DEFAULT_OPTS.js
+  }
+  if (!ret.qoutes_obj) {
+    // convert to object with quote keys (fast lookup)
+    ret.quotes_obj = ret.quotes.reduce(function(m, v) { m[v] = 1; return m}, {})
   }
   return ret
 }
@@ -160,7 +164,7 @@ function table_rows (a, opt) {
 
   return cell_strings.map(function (row) {
     if (is_comment(row)) {
-      return _jstr(row) + opt.cell_sep
+      return _jstr(row, opt) + opt.cell_sep
     }
     var last = row.length - 1
     var padded = row.map(function (s, ci) {
@@ -204,29 +208,33 @@ var esc_re = /['\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17
 
 function str2str (s, opt) {
   esc_re.lastIndex = 0
-  var q = "'"
+  var q = opt.quotes[0] // default quote
   if (esc_re.test(s)) {
-    var s_qt = 0    // number single-quotes
-    var d_qt = 0    // number double-quotes
+    var q_counts = {}
     s = s.replace(esc_re, function (c) {
       var ret = slash_esc[c]
-      if (ret) {
-      } else if (c === '"') {
-        d_qt++; ret = c             // just count
-      } else if (c === "'") {
-        s_qt++; ret = c             // just count
+      if (ret) { return ret }
+      if (opt.quotes_obj[c]) {
+        q_counts[c] = (q_counts[c] || 0) + 1
+        ret = c
       } else {
         ret = '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4)
       }
       return ret
     })
-    if (s_qt) {
-      if (d_qt < s_qt) {
-        q = '"'
-      }
-      if (d_qt) {
-        // string has single and double quotes - escape the chosen quote (least-bad)
-        s = s.replace(quote_re[q], qt_esc[q])
+
+    var quotes_found = Object.keys(q_counts)
+    if (quotes_found.length) {
+      if (opt.quotes.length > 1) {
+        // set q to first unused quote
+        q = opt.quotes.find(function (q) {return q_counts[q] == null})
+        if (q == null) {
+          // all quotes used, set q to least-used
+          q = opt.quotes.reduce(function (c, q) {
+            return q_counts[q] < q_counts[c] ? q : c
+          }, opt.quotes[0])
+        }
+        s = s.replace(q, '\\' + q)
       }
     }
   }
