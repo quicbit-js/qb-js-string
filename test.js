@@ -162,3 +162,24 @@ test('jstr.table() errors', function (t) {
     [ [['a', 'b', 'c']],                        /data is not a table/ ],
   ], jstr.table, {assert: 'throws'})
 })
+
+test.skip('jstr.table_rows() JAVA', function (t) {
+  t.table_assert([
+    [ 'tbl',        'opt',                            'exp' ],
+    [ [['a'], [1], [2]], {lang: 'java'}, [
+      'a( "a" )',
+      "a( 1 ),",
+      "a( 2 ),"
+    ]],
+    [ [['a','b'], [1,'x'], [2,'y']], {lang: 'java'}, [
+      "[ 'a', 'b' ],",
+      "[ 1,   'x' ],",
+      "[ 2,   'y' ],"
+    ]],
+    [ [['a','b'], [1,['x', 4]], [2,['y',5]]],   {lang: 'java'}, [
+      "[ 'a', 'b' ],",
+      "[ 1,   [ 'x', 4 ] ],",
+      "[ 2,   [ 'y', 5 ] ],"
+    ] ],
+  ], jstr.table_rows)
+})

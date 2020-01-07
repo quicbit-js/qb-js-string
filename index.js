@@ -16,45 +16,65 @@
 
 var assign = require('qb-assign')
 
-var DEFAULT_OPT = {
-  // lang: 'js', for javascript strings, 'java' for java-compatible
-  // lang: java, for java-compatible strings
-  arr_beg: '[',
-  arr_end: ']',
-  obj_beg: '{',
-  obj_end: '}',
-  keyval_sep: ':',
-  val_sep: ',',
-  row_sep: ',',
-  cell_sep: ',',
-  quote: ["'", '"'],  // if more than one, the best is chosen.
-  // gap settings by depth. deeply nested values are more squeezed together
-  gaps: [
-    // ogap (outter gap) (next to braces)           [<here>val1, val2<here>]
-    // vgap (value gap) between values              [ val1,<here>val2 ]
-    //      and between object key-value pairs      { key1: val1,<here>key2: val2 }
-    // kgap (key gap) is the gap between key-value  { key1:<here>val1, key2:<here>val2 }
-    {ogap: ' ', kgap: ' ', vgap: ' '},    // depth  0
-    {ogap: '',  kgap: ' ', vgap: ' '},    // depth  1
-    {ogap: '',  kgap: '', vgap: ''},      // depth >1
-  ]
+var DEFAULT_GAPS = [
+  // ogap (outter gap) (next to braces)           [<here>val1, val2<here>]
+  // vgap (value gap) between values              [ val1,<here>val2 ]
+  //      and between object key-value pairs      { key1: val1,<here>key2: val2 }
+  // kgap (key gap) is the gap between key-value  { key1:<here>val1, key2:<here>val2 }
+  {ogap: ' ', kgap: ' ', vgap: ' '},    // depth  0
+  {ogap: '',  kgap: ' ', vgap: ' '},    // depth  1
+  {ogap: '',  kgap: '', vgap: ''},      // depth >1
+]
+
+// these options create strings for java test tables using
+// test-kit's array 'a(...)' and object 'o(...)' functions.
+var DEFAULT_OPTS = {
+  java: {
+    lang: 'java',
+    arr_beg: 'a(',
+    arr_end: ')',
+    obj_beg: 'o(',
+    obj_end: ')',
+    keyval_sep: ',',
+    val_sep: ',',
+    row_sep: ',',
+    cell_sep: ',',
+    quote: ['"'],  // if more than one, the best is chosen.
+    // gap settings by depth. deeply nested values are more squeezed together
+    gaps: DEFAULT_GAPS,
+  },
+  js: {
+    lang: 'js',
+    arr_beg: '[',
+    arr_end: ']',
+    obj_beg: '{',
+    obj_end: '}',
+    keyval_sep: ':',
+    val_sep: ',',
+    row_sep: ',',
+    cell_sep: ',',
+    quote: ["'", '"'],  // if more than one, the best is chosen.
+    // gap settings by depth. deeply nested values are more squeezed together
+    gaps: DEFAULT_GAPS,
+  }
 }
 
 function init_opt (opt) {
   var ret
   if (opt) {
-    ret = assign({}, DEFAULT_OPT, opt)
+    var dopt = DEFAULT_OPTS[opt.lang] || DEFAULT_OPTS.js
+    ret = assign({}, dopt, opt)
     // use defaults to fill missing options at every depth.
     ret.lang = ret.lang || 'js'
     if (ret.gaps) {
       ret.gaps = Array.isArray(ret.gaps) ? ret.gaps : [ret.gaps]
-      var dgaps = DEFAULT_OPT.gaps
+      var dgaps = dopt.gaps
       ret.gaps = ret.gaps.map(function (o, i) {
         return assign({}, dgaps[i] || dgaps[dgaps.length-1], o)
       })
     }
   } else {
-    ret = DEFAULT_OPT
+    ret = DEFAULT_OPTS.js
   }
   return ret
 }
@@ -73,7 +93,7 @@ function _jstr (v, opt, depth) {
       case 'object':
         return Array.isArray(v) ? arr2str(v, opt, depth) : obj2str(v, opt, depth)
       case 'string':
-        return str2str(v)
+        return str2str(v, opt)
       case 'number' :
       case 'boolean':
         return String(v)
@@ -95,7 +115,7 @@ function obj2str (o, opt, depth) {
   var keys = Object.keys(o)
   if (keys.length === 0) { return opt.obj_beg + opt.obj_end }
   var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
-  var pairs = keys.map(function (k) { return key2str(k) + opt.keyval_sep + gap.kgap + _jstr(o[k], opt, depth + 1) })
+  var pairs = keys.map(function (k) { return key2str(k, opt) + opt.keyval_sep + gap.kgap + _jstr(o[k], opt, depth + 1) })
   return opt.obj_beg + gap.ogap + pairs.join(opt.val_sep + gap.vgap) + gap.ogap + opt.obj_end
 }
 
@@ -116,13 +136,14 @@ function is_comment (s) {
   return typeof s === 'string' && s[0] === '#'
 }
 function table_rows (a, opt) {
+  opt = init_opt(opt)
   var numcols = a.find(function (row) { return !is_comment(row) }).length
   var cell_strings = a.map(function (row) {
     if (is_comment(row)) {
       return row
     }
     return row.map(function (v, ci) {
-      return _jstr(v, init_opt(opt), 0) + (ci < numcols - 1 ? opt.row_sep : '')     // put comma next to data (less cluttered)
+      return _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.row_sep : '')     // put comma next to data (less cluttered)
     })
   })
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
@@ -145,7 +166,7 @@ function table_rows (a, opt) {
     var padded = row.map(function (s, ci) {
       return ci === last ? s : padr(s, widths[ci])  // don't pad last column
     })
-    return '[ ' + padded.join(' ') + ' ],'
+    return opt.arr_beg + ' ' + padded.join(' ') + ' ' + opt.arr_end + opt.row_sep
   })
 }
 
@@ -181,7 +202,7 @@ var quote_re = {
 }
 var esc_re = /['\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g
 
-function str2str (s) {
+function str2str (s, opt) {
   esc_re.lastIndex = 0
   var q = "'"
   if (esc_re.test(s)) {
@@ -212,8 +233,8 @@ function str2str (s) {
   return q + s + q
 }
 
-function key2str (k) {
-  return (k.match(/^[_$a-zA-Z][_$a-zA-Z0-9]*$/)) ? k : str2str(k)
+function key2str (k, opt) {
+  return (k.match(/^[_$a-zA-Z][_$a-zA-Z0-9]*$/)) ? k : str2str(k, opt)
 }
 
 function err (msg) { throw Error(msg) }
