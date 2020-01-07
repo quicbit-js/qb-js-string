@@ -163,23 +163,23 @@ test('jstr.table() errors', function (t) {
   ], jstr.table, {assert: 'throws'})
 })
 
-test.skip('jstr.table_rows() JAVA', function (t) {
+test('jstr.table_rows() JAVA', function (t) {
   t.table_assert([
     [ 'tbl',        'opt',                            'exp' ],
     [ [['a'], [1], [2]], {lang: 'java'}, [
-      'a( "a" )',
-      "a( 1 ),",
-      "a( 2 ),"
+      'a( "a" ),',
+      'a( 1 ),',
+      'a( 2 ),'
     ]],
     [ [['a','b'], [1,'x'], [2,'y']], {lang: 'java'}, [
-      "[ 'a', 'b' ],",
-      "[ 1,   'x' ],",
-      "[ 2,   'y' ],"
+      'a( "a", "b" ),',
+      'a( 1,   "x" ),',
+      'a( 2,   "y" ),'
     ]],
     [ [['a','b'], [1,['x', 4]], [2,['y',5]]],   {lang: 'java'}, [
-      "[ 'a', 'b' ],",
-      "[ 1,   [ 'x', 4 ] ],",
-      "[ 2,   [ 'y', 5 ] ],"
-    ] ],
+      'a( "a", "b" ),',
+      'a( 1,   a( "x", 4 ) ),',
+      'a( 2,   a( "y", 5 ) ),'
+    ]],
   ], jstr.table_rows)
 })
