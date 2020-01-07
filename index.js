@@ -16,25 +16,41 @@
 
 var assign = require('qb-assign')
 
-// options-by-depth.
-var DEFAULT_OPT = [
-  // ogap (outter gap) (next to braces)           [<here>val1, val2<here>]
-  // vgap (value gap) between values              [ val1,<here>val2 ]
-  //      and between object key-value pairs      { key1: val1,<here>key2: val2 }
-  // kgap (key gap) is the gap between key-value  { key1:<here>val1, key2:<here>val2 }
-  {ogap: ' ', kgap: ' ', vgap: ' '},    // depth  0
-  {ogap: '',  kgap: ' ', vgap: ' '},    // depth  1
-  {ogap: '',  kgap: '', vgap: ''},     // depth >1
-]
+var DEFAULT_OPT = {
+  // lang: 'js', for javascript strings, 'java' for java-compatible
+  // lang: java, for java-compatible strings
+  arr_beg: '[',
+  arr_end: ']',
+  obj_beg: '{',
+  obj_end: '}',
+  keyval_sep: ':',
+  val_sep: ',',
+  quote: ["'", '"'],  // if more than one, the best is chosen.
+  // gap settings by depth. deeply nested values are more squeezed together
+  gaps: [
+    // ogap (outter gap) (next to braces)           [<here>val1, val2<here>]
+    // vgap (value gap) between values              [ val1,<here>val2 ]
+    //      and between object key-value pairs      { key1: val1,<here>key2: val2 }
+    // kgap (key gap) is the gap between key-value  { key1:<here>val1, key2:<here>val2 }
+    {ogap: ' ', kgap: ' ', vgap: ' '},    // depth  0
+    {ogap: '',  kgap: ' ', vgap: ' '},    // depth  1
+    {ogap: '',  kgap: '', vgap: ''},      // depth >1
+  ]
+}
 
 function init_opt (opt) {
   var ret
   if (opt) {
+    ret = assign({}, opt)
     // use defaults to fill missing options at every depth.
-    ret = Array.isArray(opt) ? opt : [opt]
-    ret = ret.map(function (o, i) {
-      return assign({}, DEFAULT_OPT[i] || DEFAULT_OPT[DEFAULT_OPT.length-1], o)
-    })
+    ret.lang = ret.lang || 'js'
+    if (ret.gaps) {
+      ret.gaps = Array.isArray(ret.gaps) ? ret.gaps : [ret.gaps]
+      var dgaps = DEFAULT_OPT.gaps
+      ret.gaps = ret.gaps.map(function (o, i) {
+        return assign({}, dgaps[i] || dgaps[dgaps.length-1], o)
+      })
+    }
   } else {
     ret = DEFAULT_OPT
   }
@@ -45,7 +61,7 @@ function jstr (v, opt) {
   return _jstr(v, init_opt(opt), 0)
 }
 
-function _jstr (v, optarr, depth) {
+function _jstr (v, opt, depth) {
   if (v === null) {
     return 'null'
   } else if (v === undefined) {
@@ -53,7 +69,7 @@ function _jstr (v, optarr, depth) {
   } else {
     switch (typeof v) {
       case 'object':
-        return Array.isArray(v) ? arr2str(v, optarr, depth) : obj2str(v, optarr, depth)
+        return Array.isArray(v) ? arr2str(v, opt, depth) : obj2str(v, opt, depth)
       case 'string':
         return str2str(v)
       case 'number' :
@@ -65,20 +81,20 @@ function _jstr (v, optarr, depth) {
   }
 }
 
-function arr2str (a, optarr, depth) {
+function arr2str (a, opt, depth) {
   if (a.length === 0) { return '[]' }
-  var opt = optarr[depth] || optarr[optarr.length-1]
+  var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
   var last = a.length - 1
-  var ret = a.map(function (v, i) { return _jstr(v, optarr, depth + 1) + (i < last ? ',' : '') })
-  return '[' + opt.ogap + ret.join(opt.vgap) + opt.ogap + ']'
+  var ret = a.map(function (v, i) { return _jstr(v, opt, depth + 1) + (i < last ? ',' : '') })
+  return '[' + gap.ogap + ret.join(gap.vgap) + gap.ogap + ']'
 }
 
-function obj2str (o, optarr, depth) {
+function obj2str (o, opt, depth) {
   var keys = Object.keys(o)
   if (keys.length === 0) { return '{}' }
-  var opt = optarr[depth] || optarr[optarr.length-1]
-  var pairs = keys.map(function (k) { return key2str(k) + ':' + opt.kgap + _jstr(o[k], optarr, depth + 1) })
-  return '{' + opt.ogap + pairs.join(',' + opt.vgap) + opt.ogap + '}'
+  var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
+  var pairs = keys.map(function (k) { return key2str(k) + ':' + gap.kgap + _jstr(o[k], opt, depth + 1) })
+  return '{' + gap.ogap + pairs.join(',' + gap.vgap) + gap.ogap + '}'
 }
 
 function is_table (a) {
