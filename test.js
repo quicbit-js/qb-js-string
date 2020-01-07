@@ -183,3 +183,35 @@ test('jstr.table_rows() JAVA', function (t) {
     ]],
   ], jstr.table_rows)
 })
+
+test('jstr.table() JAVA', function (t) {
+  t.table_assert([
+    [ 'tbl',         'opt',                           'exp' ],
+    [
+      [['a'], [1], [2]],
+      {lang: 'java'},
+      t.lines(`
+        a( "a" ),
+        a( 1 ),
+        a( 2 ),`
+      ).join('\n')
+    ],
+    [ [['a','b'], [1,'x'], [2,'y']],
+      {lang: 'java'},
+      t.lines(`
+        a( "a", "b" ),
+        a( 1,   "x" ),
+        a( 2,   "y" ),
+      `).join('\n')
+    ],
+    [ [['a','b'], '#r1', [1,['x', 4]], [2,['y',5]]],
+      {lang: 'java'},
+      t.lines(`
+        a( "a", "b" ),
+        "#r1",
+        a( 1,   a( "x", 4 ) ),
+        a( 2,   a( "y", 5 ) ),
+      `).join('\n')
+    ],
+  ], jstr.table)
+})
