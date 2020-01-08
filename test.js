@@ -17,15 +17,27 @@
 var test = require('test-kit').tape()
 var jstr = require('.')
 
+test('esc_quotes', function (t) {
+  t.table_assert([
+    [ 's',   'opt',    'exp' ],
+    [ '',     null,     "''"   ],
+    [ '',     {lang:'java'},     '""'   ],
+    [ '1hi1',   {quotes:['1','2','3']},     '21hi12'   ],
+    [ '"It\'s quoted"' ,     {lang:'java'},     '"\\"It\'s quoted\\""'   ],
+
+  ], jstr.quote)
+
+})
+
 test('jstr() literals', function (t) {
   t.table_assert([
     [  'v',                   'opt',               'exp' ],
-    // [ "\"Bill's\"",           {lang: 'java'},       "\"Bill\\'s\"" ],
+    [ "\"Bill's\"",           {lang: 'java'},       "\"\\\"Bill's\\\"\"" ],
     [  '',                    null,                 "''" ],
     [ 'abc',                  null,                 "'abc'" ],
     [ "Bill's",               null,                 "\"Bill's\"" ],
     [ "\"Bill's\"",           null,                 "'\"Bill\\'s\"'" ],
-    [ "\"It's Bill's '\"",   null,                 '"\\"It\'s Bill\'s \'""'  ],
+    [ "\"It's Bill's '\"",   null,                 '"\\"It\'s Bill\'s \'\\""'  ],
     [ 'a\n',                  null,                 "'a\\n'" ],
     [ 'a\\b',                 null,                 "'a\\\\b'" ],
     [ 'x\u2028y\u2029\u2030', null,                 "'x\\u2028y\\u2029‰'" ],

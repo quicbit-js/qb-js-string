@@ -65,19 +65,17 @@ function init_opt (opt) {
     var dopt = DEFAULT_OPTS[opt.lang] || DEFAULT_OPTS.js
     ret = assign({}, dopt, opt)
     // use defaults to fill missing options at every depth.
-    if (ret.gaps) {
-      ret.gaps = Array.isArray(ret.gaps) ? ret.gaps : [ret.gaps]
-      var dgaps = dopt.gaps
-      ret.gaps = ret.gaps.map(function (o, i) {
-        return assign({}, dgaps[i] || dgaps[dgaps.length-1], o)
-      })
-    }
+    ret.gaps = Array.isArray(ret.gaps) ? ret.gaps : [ret.gaps]
+    var dgaps = dopt.gaps
+    ret.gaps = ret.gaps.map(function (o, i) {
+      return assign({}, dgaps[i] || dgaps[dgaps.length-1], o)
+    })
   } else {
     ret = DEFAULT_OPTS.js
   }
-  if (!ret.quotes_obj) {
+  if (!ret.quotes.obj) {
     // convert to object with quote keys (fast lookup)
-    ret.quotes_obj = ret.quotes.reduce(function(m, v) { m[v] = 1; return m}, {})
+    ret.quotes.obj = ret.quotes.reduce(function(m, v) { m[v] = 1; return m}, {})
   }
   return ret
 }
@@ -200,17 +198,20 @@ var esc_re = /[\\\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5
 
 function str2str (s, opt) {
   esc_re.lastIndex = 0
-  var q = opt.quotes[0] // default quote
   if (esc_re.test(s)) {
     s = s.replace(esc_re, function (c) {
       return slash_esc[c] || '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4)
     })
   }
+  return quote(s, opt);
+}
 
+function quote (s, opt) {
+  var q = opt.quotes[0] // default quote
   var q_counts = {}
   for (var i=0; i<s.length; i++) {
     var c = s[i]
-    if (opt.quotes_obj[c]) {
+    if (opt.quotes.obj[c]) {
       q_counts[c] = (q_counts[c] || 0) + 1
     }
   }
@@ -225,8 +226,9 @@ function str2str (s, opt) {
           return q_counts[q] < q_counts[c] ? q : c
         }, opt.quotes[0])
       }
-      s = s.replace(q, '\\' + q)
     }
+    var quote_exp = new RegExp( q, 'g')
+    s = s.replace(quote_exp, '\\' + q)
   }
   return q + s + q
 }
@@ -239,5 +241,6 @@ function err (msg) { throw Error(msg) }
 
 jstr.table_rows = table_rows
 jstr.table = table
+jstr.quote = function (s, opt) { return quote(s, init_opt(opt)) }
 
 module.exports = jstr
