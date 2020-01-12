@@ -152,8 +152,7 @@ function table_rows (a, opt) {
       return row
     }
     return row.map(function (v, ci) {
-      var ret = _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.cell_sep : '')     // put comma next to data (less cluttered)
-      return ret
+      return _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.cell_sep : '')     // put comma next to data (less cluttered)
     })
   })
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
@@ -168,7 +167,7 @@ function table_rows (a, opt) {
     })
   })
 
-  var ret = cell_strings.map(function (row) {
+  return cell_strings.map(function (row) {
     if (is_comment(row)) {
       return _jstr(row, opt)
     }
@@ -178,7 +177,6 @@ function table_rows (a, opt) {
     })
     return opt.row_beg + padded.join(' ') + opt.row_end
   })
-  return ret
 }
 
 function table (a, opt) {
