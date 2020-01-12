@@ -37,8 +37,12 @@ var DEFAULT_OPTS = {
     obj_end: ')',
     keyval_sep: ',',
     val_sep: ',',
-    row_sep: ',',
+    row_beg: 'a( ',
+    row_end: ' )',
+    row_sep: ',\n',
     cell_sep: ',',
+    tbl_beg: 'table(\n',
+    tbl_end: '\n);',
     quotes: ['"'],  // if more than one, the best is chosen.
     // gap settings by depth. deeply nested values are more squeezed together
     gaps: DEFAULT_GAPS,
@@ -51,8 +55,12 @@ var DEFAULT_OPTS = {
     obj_end: '}',
     keyval_sep: ':',
     val_sep: ',',
-    row_sep: ',',
+    row_beg: '[ ',
+    row_end: ' ]',
+    row_sep: ',\n',
     cell_sep: ',',
+    tbl_beg: '[\n',
+    tbl_end: ',\n]',
     quotes: ["'", '"'],  // if more than one, the best is chosen.
     // gap settings by depth. deeply nested values are more squeezed together
     gaps: DEFAULT_GAPS,
@@ -144,7 +152,8 @@ function table_rows (a, opt) {
       return row
     }
     return row.map(function (v, ci) {
-      return _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.row_sep : '')     // put comma next to data (less cluttered)
+      var ret = _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.cell_sep : '')     // put comma next to data (less cluttered)
+      return ret
     })
   })
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
@@ -159,21 +168,23 @@ function table_rows (a, opt) {
     })
   })
 
-  return cell_strings.map(function (row) {
+  var ret = cell_strings.map(function (row) {
     if (is_comment(row)) {
-      return _jstr(row, opt) + opt.cell_sep
+      return _jstr(row, opt)
     }
     var last = row.length - 1
     var padded = row.map(function (s, ci) {
       return ci === last ? s : padr(s, widths[ci])  // don't pad last column
     })
-    return opt.arr_beg + ' ' + padded.join(' ') + ' ' + opt.arr_end + opt.row_sep
+    return opt.row_beg + padded.join(' ') + opt.row_end
   })
+  return ret
 }
 
 function table (a, opt) {
   is_table(a) || err('data is not a table (array of 2 or more same-length arrays)')
-  return table_rows(a, opt).join('\n')
+  opt = init_opt(opt)
+  return opt.tbl_beg + table_rows(a, opt).join(opt.row_sep) + opt.tbl_end
 }
 
 // escape logic is based on logic in http://github.com/douglascrockford/JSON-js,

@@ -29,7 +29,7 @@ test('esc_quotes', function (t) {
 
 })
 
-test('jstr() literals', function (t) {
+test('literals', function (t) {
   t.table_assert([
     [  'v',                   'opt',               'exp' ],
     [ "\"Bill's\"",           {lang: 'java'},       "\"\\\"Bill's\\\"\"" ],
@@ -49,14 +49,14 @@ test('jstr() literals', function (t) {
   ], jstr )
 })
 
-test('jstr() errors',          function (t) {
+test('errors',          function (t) {
   t.table_assert([
     [ 'v',                      'exp' ],
     [ function () {},           /type "function" not implemented/ ],
   ], jstr, {assert: 'throws'} )
 })
 
-test('jstr() array', function (t) {
+test('array', function (t) {
   t.table_assert([
     [ 'a',                'opt',                   'exp' ],
     [ [],                 null,                    "[]" ],
@@ -73,7 +73,7 @@ test('jstr() array', function (t) {
   ], jstr)
 })
 
-test('jstr() object', function (t) {
+test('object', function (t) {
   t.table_assert([
     [ 'a',                              'exp' ],
     [ {},                               "{}" ],
@@ -84,7 +84,7 @@ test('jstr() object', function (t) {
   ], jstr)
 })
 
-test('jstr() arr/obj combo', function (t) {
+test('arr/obj combo', function (t) {
   t.table_assert([
     [ 'a',                                 'opt',                             'exp'                                 ],
     [ [ { a: 1 }, [1, [2,3,{ '4': 5 }]] ], { gaps: { ogap: '', kgap: '', vgap: '' } },  "[{a:1},[1,[2,3,{'4':5}]]]"           ],
@@ -104,71 +104,85 @@ test('jstr() arr/obj combo', function (t) {
   ], jstr)
 })
 
-test('jstr.table_rows()', function (t) {
+test('table_rows', function (t) {
   t.table_assert([
     [ 'tbl',                                    'exp' ],
-    [ [['a'], [1], [2]], [
-      "[ 'a' ],",
-      "[ 1 ],",
-      "[ 2 ],"
-    ]],
-    [ [['a','b'], [1,'x'], [2,'y']], [
-      "[ 'a', 'b' ],",
-      "[ 1,   'x' ],",
-      "[ 2,   'y' ],"
-    ]],
-    [ [['a','b'], [1,['x', 4]], [2,['y',5]]],   [
-      "[ 'a', 'b' ],",
-      "[ 1,   [ 'x', 4 ] ],",
-      "[ 2,   [ 'y', 5 ] ],"
+    [
+      [['a'], [1], [2]],
+      [
+        "[ 'a' ]",
+        "[ 1 ]",
+        "[ 2 ]"
+      ]
+    ],
+    [
+      [
+        ['a','b'], [1,'x'], [2,'y']], [
+        "[ 'a', 'b' ]",
+        "[ 1,   'x' ]",
+        "[ 2,   'y' ]"
+      ]
+    ],
+    [
+      [['a','b'], [1,['x', 4]], [2,['y',5]]],   [
+      "[ 'a', 'b' ]",
+      "[ 1,   [ 'x', 4 ] ]",
+      "[ 2,   [ 'y', 5 ] ]"
     ] ],
   ], jstr.table_rows)
 })
 
-test('jstr.table_rows() comments', function (t) {
+test('table_rows comments', function (t) {
   t.table_assert([
     [ 'tbl',                                    'exp' ],
     [ ['#head', ['a'], [1], '#r2', [2], '#tail'], [
-      "'#head',",
-      "[ 'a' ],",
-      "[ 1 ],",
-      "'#r2',",
-      "[ 2 ],",
-      "'#tail',"
+      "'#head'",
+      "[ 'a' ]",
+      "[ 1 ]",
+      "'#r2'",
+      "[ 2 ]",
+      "'#tail'"
     ]],
   ], jstr.table_rows)
 })
 
-test('jstr.table()', function (t) {
+test('table', function (t) {
   t.table_assert([
     [ 'tbl',                                    'exp' ],
     [
       [['a'], [1], [2]],
       t.lines(`
+        [
         [ 'a' ],
         [ 1 ],
-        [ 2 ],`
+        [ 2 ],
+        ]
+      `
       ).join('\n')
     ],
     [ [['a','b'], [1,'x'], [2,'y']],
       t.lines(`
+        [
         [ 'a', 'b' ],
         [ 1,   'x' ],
         [ 2,   'y' ],
+        ]
       `).join('\n')
     ],
     [ [['a','b'], '#r1', [1,['x', 4]], [2,['y',5]]],
       t.lines(`
+        [
         [ 'a', 'b' ],
         '#r1',
         [ 1,   [ 'x', 4 ] ],
         [ 2,   [ 'y', 5 ] ],
+        ]
       `).join('\n')
     ],
   ], jstr.table)
 })
 
-test('jstr.table() errors', function (t) {
+test('table() errors', function (t) {
   t.table_assert([
     [ 'tbl',                                    'exp' ],
     [ [['a'], [1, 2]],                          /data is not a table/ ],
@@ -176,54 +190,62 @@ test('jstr.table() errors', function (t) {
   ], jstr.table, {assert: 'throws'})
 })
 
-test('jstr.table_rows() JAVA', function (t) {
+test('table_rows JAVA', function (t) {
   t.table_assert([
     [ 'tbl',        'opt',                            'exp' ],
     [ [['a'], [1], [2]], {lang: 'java'}, [
-      'a( "a" ),',
-      'a( 1 ),',
-      'a( 2 ),'
+      'a( "a" )',
+      'a( 1 )',
+      'a( 2 )'
     ]],
     [ [['a','b'], [1,'x'], [2,'y']], {lang: 'java'}, [
-      'a( "a", "b" ),',
-      'a( 1,   "x" ),',
-      'a( 2,   "y" ),'
+      'a( "a", "b" )',
+      'a( 1,   "x" )',
+      'a( 2,   "y" )'
     ]],
     [ [['a','b'], [1,['x', 4]], [2,['y',5]]],   {lang: 'java'}, [
-      'a( "a", "b" ),',
-      'a( 1,   a( "x", 4 ) ),',
-      'a( 2,   a( "y", 5 ) ),'
+      'a( "a", "b" )',
+      'a( 1,   a( "x", 4 ) )',
+      'a( 2,   a( "y", 5 ) )'
     ]],
   ], jstr.table_rows)
 })
 
-test('jstr.table() JAVA', function (t) {
+test('table JAVA', function (t) {
   t.table_assert([
     [ 'tbl',         'opt',                           'exp' ],
     [
       [['a'], [1], [2]],
       {lang: 'java'},
       t.lines(`
+        table(
         a( "a" ),
         a( 1 ),
-        a( 2 ),`
-      ).join('\n')
-    ],
-    [ [['a','b'], [1,'x'], [2,'y']],
-      {lang: 'java'},
-      t.lines(`
-        a( "a", "b" ),
-        a( 1,   "x" ),
-        a( 2,   "y" ),
+        a( 2 )
+        );
       `).join('\n')
     ],
-    [ [['a','b'], '#r1', [1,['x', 4]], [2,['y',5]]],
+    [
+      [['a','b'], [1,'x'], [2,'y'] ],
       {lang: 'java'},
       t.lines(`
+        table(
+        a( "a", "b" ),
+        a( 1,   "x" ),
+        a( 2,   "y" )
+        );
+      `).join('\n')
+    ],
+    [
+      [ ['a','b'], '#r1', [1,['x', 4]], [2,['y',5]] ],
+      {lang: 'java'},
+      t.lines(`
+        table(
         a( "a", "b" ),
         "#r1",
         a( 1,   a( "x", 4 ) ),
-        a( 2,   a( "y", 5 ) ),
+        a( 2,   a( "y", 5 ) )
+        );
       `).join('\n')
     ],
   ], jstr.table)
