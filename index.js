@@ -28,25 +28,8 @@ var DEFAULT_GAPS = [
 
 // these options create strings for java test tables using
 // test-kit's array 'a(...)' and object 'o(...)' functions.
+
 var DEFAULT_OPTS = {
-  java: {
-    lang: 'java',
-    arr_beg: 'a(',
-    arr_end: ')',
-    obj_beg: 'o(',
-    obj_end: ')',
-    keyval_sep: ',',
-    val_sep: ',',
-    row_beg: 'a( ',
-    row_end: ' )',
-    row_sep: ',\n',
-    cell_sep: ',',
-    tbl_beg: 'table(\n',
-    tbl_end: '\n);',
-    quotes: ['"'],  // if more than one, the best is chosen.
-    // gap settings by depth. deeply nested values are more squeezed together
-    gaps: DEFAULT_GAPS,
-  },
   js: {
     lang: 'js',
     arr_beg: '[',
@@ -61,11 +44,25 @@ var DEFAULT_OPTS = {
     cell_sep: ',',
     tbl_beg: '[\n',
     tbl_end: ',\n]',
-    quotes: ["'", '"'],  // if more than one, the best is chosen.
+    quotes: ["'", '"'],  // if a string contains quotes, the quote needing least escapes is chosen
     // gap settings by depth. deeply nested values are more squeezed together
     gaps: DEFAULT_GAPS,
   }
 }
+
+DEFAULT_OPTS.java = assign({}, DEFAULT_OPTS.js, {
+  lang: 'java',
+    arr_beg: 'a(',
+    arr_end: ')',
+    obj_beg: 'o(',
+    obj_end: ')',
+    keyval_sep: ',',
+    row_beg: 'a( ',
+    row_end: ' )',
+    tbl_beg: 'table(\n',
+    tbl_end: '\n);',
+    quotes: ['"'],
+})
 
 function init_opt (opt) {
   var ret
