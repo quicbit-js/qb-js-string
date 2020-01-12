@@ -44,6 +44,7 @@ var DEFAULT_OPTS = {
     cell_sep: ',',
     tbl_beg: '[\n',
     tbl_end: ',\n]',
+    indent: '  ',
     quotes: ["'", '"'],  // if a string contains quotes, the quote needing least escapes is chosen
     // gap settings by depth. deeply nested values are more squeezed together
     gaps: DEFAULT_GAPS,
@@ -59,8 +60,9 @@ DEFAULT_OPTS.java = assign({}, DEFAULT_OPTS.js, {
     keyval_sep: ',',
     row_beg: 'a( ',
     row_end: ' )',
-    tbl_beg: 'table(\n',
+    tbl_beg: 'a(\n',
     tbl_end: '\n);',
+    indent: '    ',
     quotes: ['"'],
 })
 
@@ -141,6 +143,7 @@ function padr (s, l) { while (s.length < l) s += ' '; return s }
 function is_comment (s) {
   return typeof s === 'string' && s[0] === '#'
 }
+
 function table_rows (a, opt) {
   opt = init_opt(opt)
   var numcols = a.find(function (row) { return !is_comment(row) }).length
@@ -149,7 +152,7 @@ function table_rows (a, opt) {
       return row
     }
     return row.map(function (v, ci) {
-      return _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.cell_sep : '')     // put comma next to data (less cluttered)
+      return _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.cell_sep : '')
     })
   })
   var widths = []; for (var i = 0; i < numcols; i++) { widths[i] = 0 }
@@ -179,7 +182,8 @@ function table_rows (a, opt) {
 function table (a, opt) {
   is_table(a) || err('data is not a table (array of 2 or more same-length arrays)')
   opt = init_opt(opt)
-  return opt.tbl_beg + table_rows(a, opt).join(opt.row_sep) + opt.tbl_end
+  var indented_rows = opt.indent + table_rows(a, opt).join(opt.row_sep + opt.indent)
+  return opt.tbl_beg + indented_rows + opt.tbl_end
 }
 
 // escape logic is based on logic in http://github.com/douglascrockford/JSON-js,
