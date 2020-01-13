@@ -265,5 +265,6 @@ function err (msg) { throw Error(msg) }
 jstr.table_rows = table_rows
 jstr.table = table
 jstr.quote = function (s, opt) { return quote(s, init_opt(opt)) }
+jstr.version = function () {return require('./package.json').version}
 
 module.exports = jstr

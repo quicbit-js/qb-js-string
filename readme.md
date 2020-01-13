@@ -37,7 +37,39 @@ npm install qb-js-string
 
 ## java string support
 
-Release
+Release 1.2.0 introduces java string support and new options for printing.  This allows 
+simple output of data tables in java that can be used for data-driven testing:
+
+    > console.log(jstr.table([['a','b'], [1,['x', 4, {b:false}] ], [2,['y',5,{a:23, b:true}]]], {lang:'java'}))
+    a(
+        a( "a", "b" ),
+        a( 1,   a( "x", 4, o(b, false) ) ),
+        a( 2,   a( "y", 5, o(a, 23, b, true) ) )
+    );
+
+Using the quicbit java testkit with JUnit, this text is valid java with the exact same input and expected output
+checks:
+
+    import org.junit.Test;
+    
+    import static com.quicbit.TestKit.*;
+    
+    public class SelectTest {
+        @Test
+        public void testRegex() {
+    
+            table(
+                a( "a", "b" ),
+                a( 1,   a( "x", 4, o(b, false) ) ),
+                a( 2,   a( "y", 5, o(a, 23, b, true) ) )
+            ).test("regex",
+                (r) -> my_tests(r.intval("a"))
+            );
+        }
+    }
+
+    
+
 
 ## Dev Notes
 

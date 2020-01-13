@@ -263,3 +263,8 @@ test('table JAVA', function (t) {
     ],
   ], jstr.table)
 })
+
+test('version', function (t) {
+  t.same(jstr.version(), '1.2.0')
+  t.end()
+})
