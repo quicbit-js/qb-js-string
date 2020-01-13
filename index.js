@@ -32,6 +32,7 @@ var DEFAULT_GAPS = [
 var DEFAULT_OPTS = {
   js: {
     lang: 'js',
+    undefined_string: 'undefined',
     arr_beg: '[',
     arr_end: ']',
     obj_beg: '{',
@@ -53,17 +54,18 @@ var DEFAULT_OPTS = {
 
 DEFAULT_OPTS.java = assign({}, DEFAULT_OPTS.js, {
   lang: 'java',
-    arr_beg: 'a(',
-    arr_end: ')',
-    obj_beg: 'o(',
-    obj_end: ')',
-    keyval_sep: ',',
-    row_beg: 'a( ',
-    row_end: ' )',
-    tbl_beg: 'a(\n',
-    tbl_end: '\n);',
-    indent: '    ',
-    quotes: ['"'],
+  undefined_string: 'null',
+  arr_beg: 'a(',
+  arr_end: ')',
+  obj_beg: 'o(',
+  obj_end: ')',
+  keyval_sep: ',',
+  row_beg: 'a( ',
+  row_end: ' )',
+  tbl_beg: 'a(\n',
+  tbl_end: '\n);',
+  indent: '    ',
+  quotes: ['"'],
 })
 
 function init_opt (opt) {
@@ -74,7 +76,7 @@ function init_opt (opt) {
     // use defaults to fill missing options at every depth.
     ret.gaps = Array.isArray(ret.gaps) ? ret.gaps : [ret.gaps]
     var dgaps = dopt.gaps
-    ret.gaps = ret.gaps.map(function (o, i) {
+    ret.gaps = map(ret.gaps, function (o, i) {
       return assign({}, dgaps[i] || dgaps[dgaps.length-1], o)
     })
   } else {
@@ -95,7 +97,7 @@ function _jstr (v, opt, depth) {
   if (v === null) {
     return 'null'
   } else if (v === undefined) {
-    return 'undefined'
+    return opt.undefined_string
   } else {
     switch (typeof v) {
       case 'object':
@@ -115,7 +117,7 @@ function arr2str (a, opt, depth) {
   if (a.length === 0) { return opt.arr_beg + opt.arr_end }
   var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
   var last = a.length - 1
-  var ret = a.map(function (v, i) { return _jstr(v, opt, depth + 1) + (i < last ? opt.val_sep : '') })
+  var ret = map(a, function (v, i) { return _jstr(v, opt, depth + 1) + (i < last ? opt.val_sep : '') })
   return opt.arr_beg + gap.ogap + ret.join(gap.vgap) + gap.ogap + opt.arr_end
 }
 
@@ -123,7 +125,7 @@ function obj2str (o, opt, depth) {
   var keys = Object.keys(o)
   if (keys.length === 0) { return opt.obj_beg + opt.obj_end }
   var gap = opt.gaps[depth] || opt.gaps[opt.gaps.length-1]
-  var pairs = keys.map(function (k) { return key2str(k, opt) + opt.keyval_sep + gap.kgap + _jstr(o[k], opt, depth + 1) })
+  var pairs = map(keys, function (k) { return key2str(k, opt) + opt.keyval_sep + gap.kgap + _jstr(o[k], opt, depth + 1) })
   return opt.obj_beg + gap.ogap + pairs.join(opt.val_sep + gap.vgap) + gap.ogap + opt.obj_end
 }
 
@@ -144,14 +146,25 @@ function is_comment (s) {
   return typeof s === 'string' && s[0] === '#'
 }
 
+// array.map() will skip undefined values such as [,3] - only iterating on the defined.  This
+// map() function iterates all values from zero to a.length().
+function map (a, fn) {
+  var len = a.length;
+  var ret = []
+  for (var i=0; i<len; i++) {
+    ret[i] = fn(a[i], i)
+  }
+  return ret;
+}
+
 function table_rows (a, opt) {
   opt = init_opt(opt)
   var numcols = a.find(function (row) { return !is_comment(row) }).length
-  var cell_strings = a.map(function (row) {
+  var cell_strings = map(a, function (row) {
     if (is_comment(row)) {
       return row
     }
-    return row.map(function (v, ci) {
+    return map(row, function (v, ci) {
       return _jstr(v, opt, 0) + (ci < numcols - 1 ? opt.cell_sep : '')
     })
   })
@@ -167,12 +180,12 @@ function table_rows (a, opt) {
     })
   })
 
-  return cell_strings.map(function (row) {
+  return map(cell_strings, function (row) {
     if (is_comment(row)) {
       return _jstr(row, opt)
     }
     var last = row.length - 1
-    var padded = row.map(function (s, ci) {
+    var padded = map(row, function (s, ci) {
       return ci === last ? s : padr(s, widths[ci])  // don't pad last column
     })
     return opt.row_beg + padded.join(' ') + opt.row_end

@@ -35,6 +35,10 @@ npm install qb-js-string
     
 ... this is how test-kit generates nicely formated table rows from javascript test tables.
 
+## java string support
+
+Release
+
 ## Dev Notes
 
 It would be nice to extend the formatting to do this:
