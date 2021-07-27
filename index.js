@@ -257,7 +257,11 @@ function quote (s, opt) {
 }
 
 function key2str (k, opt) {
-  return (k.match(/^[_$a-zA-Z][_$a-zA-Z0-9]*$/)) ? k : str2str(k, opt)
+  if (opt.lang === 'js' && k.match(/^[_$a-zA-Z][_$a-zA-Z0-9]*$/)) {
+    return k    // no need for quotes
+  } else {
+    return str2str(k, opt)
+  }
 }
 
 function err (msg) { throw Error(msg) }

@@ -224,7 +224,7 @@ test('table_rows JAVA', function (t) {
   ], jstr.table_rows)
 })
 
-test('table JAVA', function (t) {
+test('table JAVA arrays', function (t) {
   t.table_assert([
     [ 'tbl',         'opt',                           'exp' ],
     [
@@ -259,6 +259,22 @@ test('table JAVA', function (t) {
             a( 1,   a( "x", 4 ) ),
             a( 2,   a( "y", 5 ) )
         );
+      `).join('\n')
+    ],
+  ], jstr.table)
+})
+
+test('table JAVA objects', function (t) {
+  t.table_assert([
+    [ 'tbl',         'opt',                           'exp' ],
+    [
+      [['a','b'], ["r1", {x: 4}]],
+      {lang: 'java'},
+      t.lines(`
+          a(
+              a( "a",  "b" ),
+              a( "r1", o( "x", 4 ) )
+          );
       `).join('\n')
     ],
   ], jstr.table)
