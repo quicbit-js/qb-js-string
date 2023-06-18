@@ -1,6 +1,6 @@
 // Software License Agreement (ISC License)
 //
-// Copyright (c) 2017, Matthew Voss
+// Copyright (c) 2023, Matthew Voss
 //
 // Permission to use, copy, modify, and/or distribute this software for
 // any purpose with or without fee is hereby granted, provided that the
@@ -14,8 +14,8 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-var test = require('test-kit').tape()
-var jstr = require('.')
+const test = require('test-kit').tape()
+const jstr = require('.')
 
 test('esc_quotes', function (t) {
   t.table_assert([
@@ -281,6 +281,6 @@ test('table JAVA objects', function (t) {
 })
 
 test('version', function (t) {
-  t.same(jstr.version(), '1.2.0')
+  t.same(jstr.version(), '1.2.2')
   t.end()
 })
